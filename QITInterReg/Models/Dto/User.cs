@@ -25,12 +25,12 @@ namespace QITInterReg.Models
         [Display(Name ="Email ID")]
         [Required(AllowEmptyStrings =false, ErrorMessage ="Email ID required")]
         [DataType(DataType.EmailAddress)]
-        public string EmaiolID { get; set; }
+        public string EmailID { get; set; }
 
         [Display(Name ="Date of brith")]
         [DataType(DataType.Date)]
         [DisplayFormat(ApplyFormatInEditMode =true, DataFormatString ="{0:MM/dd/yyyy}")]
-        public DateTime DateOfBrith { get; set; }
+        public DateTime DateOfBirth { get; set; }
 
         [Required(AllowEmptyStrings =false, ErrorMessage ="Password is required")]
         [DataType(DataType.Password)]

@@ -78,7 +78,9 @@ namespace QITInterReg.Controllers
             return View(user);
         }
 
-        //Verify Email
+        //Verify Account
+
+
 
         //Verify Email Link
 

@@ -15,7 +15,7 @@ namespace QITInterReg.Models
     public partial class User
     {
         public int UserID { get; set; }
-        public byte[] FirstName { get; set; }
+        public string FirstName { get; set; }
         public string LastName { get; set; }
         public string EmailID { get; set; }
         public Nullable<System.DateTime> DateOfBirth { get; set; }
