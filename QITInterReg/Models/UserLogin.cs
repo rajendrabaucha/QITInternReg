@@ -8,7 +8,7 @@ namespace QITInterReg.Models
 {
     public class UserLogin
     {
-        [Display(Name ="Email ID")]
+        [Display(Name ="Email ID")] 
         [Required(AllowEmptyStrings =false,ErrorMessage ="Email Id is required")]
         public string EmailID { get; set; }
 
