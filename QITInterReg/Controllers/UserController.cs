@@ -7,12 +7,13 @@ using System.Net;
 using System.Net.Mail;
 using System.Web;
 using System.Web.Mvc;
+using System.Web.Security;
 
 namespace QITInterReg.Controllers
 {
     public class UserController : Controller
     {
-        
+
         //Registration action
         [HttpGet]
         public ActionResult Registration()
@@ -52,7 +53,7 @@ namespace QITInterReg.Controllers
                 user.IsEmailVerified = false; ;
 
                 #region Save to DB
-                using(QUIRegDBEntities dc = new QUIRegDBEntities())
+                using (QUIRegDBEntities dc = new QUIRegDBEntities())
                 {
                     dc.Users.Add(user);
                     dc.SaveChanges();
@@ -79,16 +80,90 @@ namespace QITInterReg.Controllers
         }
 
         //Verify Account
+        [HttpGet]
+        public ActionResult VerifyAccount(string id)
+        {
+            bool isVerified = false;
+            using (QUIRegDBEntities dc = new QUIRegDBEntities())
+            {
+                dc.Configuration.ValidateOnSaveEnabled = false; // This helps to avoid confirm password doesnot match issue on save change
 
+                var v = dc.Users.Where(u => u.ActivationCode == new Guid(id)).FirstOrDefault();
 
+                if (v != null)
+                {
+                    v.IsEmailVerified = true;
+                    dc.SaveChanges();
+                    isVerified = true;
 
-        //Verify Email Link
+                }
+                else
+                {
+                    ViewBag.message = "Invalid Request";
+                }
+            }
+            ViewBag.isVerified = isVerified;
+            return View();
+        }
+
 
         //Login 
+        public ActionResult Login()
+        {
+            return View();
+        }
 
         //Login POST
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult LogIn(UserLogin login,string returnUrl="")
+        {
+            string message = "";
+            using (QUIRegDBEntities dc = new QUIRegDBEntities())
+            {
+                var v = dc.Users.Where(u=> u.EmailID ==login.EmailID).FirstOrDefault();
+                if(v != null)
+                {
+                    if(string.Compare(Crypto.Hash(login.Password),v.Password) == 0) {
+                        int timeout = login.RememberMe ? 52500 : 60; //52500 min =1 year
+                        var ticket = new FormsAuthenticationTicket(login.EmailID, login.RememberMe, timeout);
+                        string encrypted = FormsAuthentication.Encrypt(ticket);
+                        var cookie = new HttpCookie(FormsAuthentication.FormsCookieName, encrypted);
+                        cookie.Expires = DateTime.Now.AddMinutes(timeout);
+                        cookie.HttpOnly = true;
+                        Response.Cookies.Add(cookie);
+
+                        if (Url.IsLocalUrl(returnUrl))
+                        {
+                            return Redirect(returnUrl);
+                        }
+                        else
+                        {
+                            return RedirectToAction("Index", "Home");
+                        }
+                    }
+                    else
+                    {
+                        message = "Invalid user credentials.";
+                    }
+                }
+                else
+                {
+                    message ="Invalid user credentials.";
+                }
+            }
+            ViewBag.message = message;
+            return View();
+        }
 
         //Logout
+        [Authorize]
+        [HttpPost]
+        public ActionResult Logout()
+        {
+            FormsAuthentication.SignOut();
+            return RedirectToAction("Login", "User");
+        }
 
         [NonAction]
         public bool isEmailExist(string emailID)
