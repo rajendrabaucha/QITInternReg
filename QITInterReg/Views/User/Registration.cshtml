@@ -6,12 +6,12 @@
 
 <h2>Registration</h2>
 
-@if (ViewBag.Verified != null && Convert.ToBoolean(ViewBag.Verified))
+@if (ViewBag.isVerified != null && Convert.ToBoolean(ViewBag.isVerified))
 {
-    if (ViewBag.Message != null)
+    if (ViewBag.message != null)
     {
         <div class="alert alert-success">
-            <strong>Success!</strong>@ViewBag.Message
+            <strong>Success!</strong>@ViewBag.message
         </div>
     }
 }
@@ -38,6 +38,8 @@ else
                 <div class="col-md-10">
                     @Html.EditorFor(model => model.EmailID, new { htmlAttributes = new { @class = "form-control" } })
                     @Html.ValidationMessageFor(model => model.EmailID, "", new { @class = "text-danger" })
+                    @Html.ValidationMessage("EmailExist", new { @class = "text-danger" })
+
                 </div>
             </div>
 
@@ -74,7 +76,7 @@ else
         if (ViewBag.Message != null)
         {
             <div class="alert alert-danger">
-                <strong>Error!</strong>@ViewBag.Message
+                <strong>Error!</strong>@ViewBag.message
             </div>
         }
     }
