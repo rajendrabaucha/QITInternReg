@@ -16,7 +16,7 @@ namespace QITInterReg.Models
         [Required(AllowEmptyStrings =false, ErrorMessage ="Password is required")]
         public string  Password { get; set; }
 
-        [Display(Name ="REemember Me")]
+        [Display(Name ="Remember Me")]
         public bool RememberMe { get; set; }
     }
 }
