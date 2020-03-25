@@ -1,4 +1,6 @@
-﻿using QITInterReg.Models;
+﻿using QITInterReg.DAO;
+using QITInterReg.DAOImpl;
+using QITInterReg.Models;
 using QITInterReg.Utils;
 using System;
 using System.Collections.Generic;
@@ -13,7 +15,12 @@ namespace QITInterReg.Controllers
 {
     public class UserController : Controller
     {
+        private UserDAO userDAO;
 
+        public UserController()
+        {
+            this.userDAO = new UserDAOImpl(new QUIRegDBEntities());
+        }
         //Registration action
         [HttpGet]
         public ActionResult Registration()
@@ -53,11 +60,7 @@ namespace QITInterReg.Controllers
                 user.IsEmailVerified = false; ;
 
                 #region Save to DB
-                using (QUIRegDBEntities dc = new QUIRegDBEntities())
-                {
-                    dc.Users.Add(user);
-                    dc.SaveChanges();
-                }
+                userDAO.insertUser(user);
 
                 #endregion
 
@@ -86,14 +89,12 @@ namespace QITInterReg.Controllers
             bool isVerified = false;
             using (QUIRegDBEntities dc = new QUIRegDBEntities())
             {
-                dc.Configuration.ValidateOnSaveEnabled = false; // This helps to avoid confirm password doesnot match issue on save change
+                User user = userDAO.getUserOnActivationSent(id);
 
-                var v = dc.Users.Where(u => u.ActivationCode == new Guid(id)).FirstOrDefault();
-
-                if (v != null)
+                if (user!=null)
                 {
-                    v.IsEmailVerified = true;
-                    dc.SaveChanges();
+                    user.IsEmailVerified = true;
+                    userDAO.updateUser(user);
                     isVerified = true;
 
                 }
@@ -119,12 +120,11 @@ namespace QITInterReg.Controllers
         public ActionResult LogIn(UserLogin login,string returnUrl="")
         {
             string message = "";
-            using (QUIRegDBEntities dc = new QUIRegDBEntities())
-            {
-                var v = dc.Users.Where(u=> u.EmailID ==login.EmailID).FirstOrDefault();
-                if(v != null)
+
+            User user = userDAO.getUserByEmail(login.EmailID);
+                if(user != null)
                 {
-                    if(string.Compare(Crypto.Hash(login.Password),v.Password) == 0) {
+                    if(string.Compare(Crypto.Hash(login.Password),user.Password) == 0) {
                         int timeout = login.RememberMe ? 52500 : 60; //52500 min =1 year
                         var ticket = new FormsAuthenticationTicket(login.EmailID, login.RememberMe, timeout);
                         string encrypted = FormsAuthentication.Encrypt(ticket);
@@ -151,7 +151,7 @@ namespace QITInterReg.Controllers
                 {
                     message ="Invalid user credentials.";
                 }
-            }
+            
             ViewBag.message = message;
             return View();
         }
@@ -168,11 +168,8 @@ namespace QITInterReg.Controllers
         [NonAction]
         public bool isEmailExist(string emailID)
         {
-            using(QUIRegDBEntities dc = new QUIRegDBEntities())
-            {
-                var v = dc.Users.Where(u => u.EmailID == emailID).FirstOrDefault();
-                return v != null;
-            }
+           
+            return userDAO.getUserByEmail(emailID)!=null;
         }
 
         [NonAction]
