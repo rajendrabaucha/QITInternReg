@@ -1,13 +1,9 @@
 ﻿using QITInterReg.DAO;
 using QITInterReg.DAOImpl;
 using QITInterReg.Models;
-using QITInterReg.Utils;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Net.Mail;
-using System.Web;
+using QITInterReg.Services;
+using QITInterReg.ServicesImpl;
+using System.Diagnostics;
 using System.Web.Mvc;
 using System.Web.Security;
 
@@ -16,10 +12,17 @@ namespace QITInterReg.Controllers
     public class UserController : Controller
     {
         private UserDAO userDAO;
+        private RegistrationService registrationService;
+        private EmailService emailService;
+        private AuthenticationService authenticationService;
 
         public UserController()
         {
             this.userDAO = new UserDAOImpl(new QUIRegDBEntities());
+            this.registrationService = new RegistrationServiceImpl();
+            this.emailService = new EmailServiceImpl();
+            this.authenticationService = new AuthenticationServiceImpl();
+
         }
         //Registration action
         [HttpGet]
@@ -40,7 +43,7 @@ namespace QITInterReg.Controllers
             if (ModelState.IsValid)
             {
                 //Check Email already exist
-                var isExist = isEmailExist(user.EmailID);
+                var isExist = registrationService.isEmailExist(user.EmailID);
 
                 if (isExist)
                 {
@@ -48,28 +51,19 @@ namespace QITInterReg.Controllers
                     return View(user);
                 }
 
-                #region Generate activation code
-
-                user.ActivationCode = Guid.NewGuid();
-                #endregion
-
-                #region Password Hashing
-                user.Password = Crypto.Hash(user.Password);
-                user.ConfirmPassword = Crypto.Hash(user.ConfirmPassword);
-                #endregion
-                user.IsEmailVerified = false; ;
-
-                #region Save to DB
-                userDAO.insertUser(user);
-
-                #endregion
-
-
-                //Send Email to User
-                SendVerificationEmail(user.EmailID, user.ActivationCode.ToString());
-                message = "Registration successfully done. Account activation link has been" +
-                    "sent to you to your email address " + user.EmailID;
-                isVerified = true;
+                user = registrationService.registerUserInDB(user);
+                if (user != null)
+                {
+                    message = "Registration successfully done. ";
+                    //Send Email to User
+                    message = message + SendVerificationEmail(user.EmailID, user.ActivationCode.ToString());
+                    isVerified = true;
+                }
+                else
+                {
+                    message = "Failed to register. Contact administrator";
+                    isVerified = false;
+                }
 
             }
             else
@@ -87,21 +81,11 @@ namespace QITInterReg.Controllers
         public ActionResult VerifyAccount(string id)
         {
             bool isVerified = false;
-            using (QUIRegDBEntities dc = new QUIRegDBEntities())
+
+            isVerified = registrationService.verifyAccount(id);
+            if (!isVerified)
             {
-                User user = userDAO.getUserOnActivationSent(id);
-
-                if (user!=null)
-                {
-                    user.IsEmailVerified = true;
-                    userDAO.updateUser(user);
-                    isVerified = true;
-
-                }
-                else
-                {
-                    ViewBag.message = "Invalid Request";
-                }
+                ViewBag.message = "Invalid Request";
             }
             ViewBag.isVerified = isVerified;
             return View();
@@ -121,34 +105,25 @@ namespace QITInterReg.Controllers
         {
             string message = "";
 
-            User user = userDAO.getUserByEmail(login.EmailID);
-                if(user != null)
-                {
-                    if(string.Compare(Crypto.Hash(login.Password),user.Password) == 0) {
-                        int timeout = login.RememberMe ? 52500 : 60; //52500 min =1 year
-                        var ticket = new FormsAuthenticationTicket(login.EmailID, login.RememberMe, timeout);
-                        string encrypted = FormsAuthentication.Encrypt(ticket);
-                        var cookie = new HttpCookie(FormsAuthentication.FormsCookieName, encrypted);
-                        cookie.Expires = DateTime.Now.AddMinutes(timeout);
-                        cookie.HttpOnly = true;
-                        Response.Cookies.Add(cookie);
 
-                        if (Url.IsLocalUrl(returnUrl))
-                        {
-                            return Redirect(returnUrl);
-                        }
-                        else
-                        {
-                            return RedirectToAction("Index", "Home");
-                        }
+            var cookie = authenticationService.authenticateUser(login);
+                if(cookie != null)
+                {
+                    Response.Cookies.Add(cookie);
+                    if (Url.IsLocalUrl(returnUrl))
+                    {
+                        return Redirect(returnUrl);
                     }
                     else
                     {
-                        message = "Invalid user credentials.";
+                        return RedirectToAction("Index", "Home");
+                        
                     }
+                   
                 }
                 else
                 {
+                Debug.WriteLine("Invalid user credentials.");
                     message ="Invalid user credentials.";
                 }
             
@@ -165,45 +140,20 @@ namespace QITInterReg.Controllers
             return RedirectToAction("Login", "User");
         }
 
-        [NonAction]
-        public bool isEmailExist(string emailID)
-        {
-           
-            return userDAO.getUserByEmail(emailID)!=null;
-        }
+        
 
         [NonAction]
-        public void SendVerificationEmail(string emailID, string activationCode)
+        public string SendVerificationEmail(string emailID, string activationCode)
         {
             var verifyUrl = "/User/VerifyAccount/" + activationCode;
             var link = Request.Url.AbsoluteUri.Replace(Request.Url.PathAndQuery, verifyUrl);
-
-            var fromEmail = new MailAddress("rajendramanandhar7@gmail.com", "rajendra manandhar");
-            var toEmail = new MailAddress(emailID);
-            var fromEmailPassword = "sbqzufdatqfbnkdj";
-            string subject = "Activation Account";
-
-            string body = "<br/><br/>Your account is successfully created. Please " +
-                "click below link to activate your account.<br/>" +
-                "<a href='" + link + "'>" + link + "</a>";
-
-            var smtp = new SmtpClient
+            if (emailService.SendVerificationEmail(emailID, activationCode, link))
             {
-                Host = "smtp.gmail.com",
-                Port = 587,
-                EnableSsl = true,
-                DeliveryMethod = SmtpDeliveryMethod.Network,
-                UseDefaultCredentials = false,
-                Credentials = new NetworkCredential(fromEmail.Address, fromEmailPassword)
-            };
+                return "Account activation link has been" +
+                    "sent to you to your email address " + emailID;
+            }
 
-            using (var message = new MailMessage(fromEmail, toEmail)
-            {
-                Subject = subject,
-                Body = body,
-                IsBodyHtml = true
-            })
-                smtp.Send(message);
+            return "But failed to send activation link to your email address.";
         }
     }
 }
