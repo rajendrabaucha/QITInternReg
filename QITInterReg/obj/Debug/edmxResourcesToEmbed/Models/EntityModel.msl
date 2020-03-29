@@ -15,5 +15,14 @@
         </MappingFragment>
       </EntityTypeMapping>
     </EntitySetMapping>
+    <EntitySetMapping Name="Customers">
+      <EntityTypeMapping TypeName="QUIRegDBModel.Customer">
+        <MappingFragment StoreEntitySet="Customers">
+          <ScalarProperty Name="LName" ColumnName="LName" />
+          <ScalarProperty Name="FName" ColumnName="FName" />
+          <ScalarProperty Name="CustomerID" ColumnName="CustomerID" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
   </EntityContainerMapping>
 </Mapping>

@@ -73,8 +73,8 @@ C:\workspace\QUITPlusIntern\QITInterReg\QITInterReg\bin\System.Web.WebPages.Razo
 C:\workspace\QUITPlusIntern\QITInterReg\QITInterReg\bin\Newtonsoft.Json.xml
 C:\workspace\QUITPlusIntern\QITInterReg\QITInterReg\bin\Antlr3.Runtime.pdb
 C:\workspace\QUITPlusIntern\QITInterReg\QITInterReg\bin\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.xml
-C:\workspace\QUITPlusIntern\QITInterReg\QITInterReg\obj\Debug\QITInterReg.csprojAssemblyReference.cache
 C:\workspace\QUITPlusIntern\QITInterReg\QITInterReg\obj\Debug\QITInterReg.csproj.CoreCompileInputs.cache
 C:\workspace\QUITPlusIntern\QITInterReg\QITInterReg\obj\Debug\QITInterReg.csproj.CopyComplete
 C:\workspace\QUITPlusIntern\QITInterReg\QITInterReg\obj\Debug\QITInterReg.dll
 C:\workspace\QUITPlusIntern\QITInterReg\QITInterReg\obj\Debug\QITInterReg.pdb
+C:\workspace\QUITPlusIntern\QITInterReg\QITInterReg\obj\Debug\QITInterReg.csprojAssemblyReference.cache
