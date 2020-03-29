@@ -5,12 +5,9 @@
     <!-- SSDL content -->
     <edmx:StorageModels>
     <Schema Namespace="QUIRegDBModel.Store" Provider="System.Data.SqlClient" ProviderManifestToken="2012" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
-        <!--Errors Found During Generation:
-warning 6002: The table/view 'QUIRegDB.dbo.Customers' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.-->
         <EntityType Name="Customers">
           <Key>
             <PropertyRef Name="CustomerID" />
-            <PropertyRef Name="FName" />
           </Key>
           <Property Name="CustomerID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
           <Property Name="FName" Type="varchar" MaxLength="50" Nullable="false" />
@@ -30,14 +27,8 @@ warning 6002: The table/view 'QUIRegDB.dbo.Customers' does not have a primary ke
           <Property Name="ActivationCode" Type="uniqueidentifier" Nullable="false" />
         </EntityType>
         <EntityContainer Name="QUIRegDBModelStoreContainer">
+          <EntitySet Name="Customers" EntityType="Self.Customers" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Users" EntityType="Self.Users" Schema="dbo" store:Type="Tables" />
-          <EntitySet Name="Customers" EntityType="Self.Customers" store:Type="Tables" store:Schema="dbo">
-            <DefiningQuery>SELECT 
-    [Customers].[CustomerID] AS [CustomerID], 
-    [Customers].[FName] AS [FName], 
-    [Customers].[LName] AS [LName]
-    FROM [dbo].[Customers] AS [Customers]</DefiningQuery>
-          </EntitySet>
         </EntityContainer>
       </Schema></edmx:StorageModels>
     <!-- CSDL content -->
@@ -63,7 +54,6 @@ warning 6002: The table/view 'QUIRegDB.dbo.Customers' does not have a primary ke
         <EntityType Name="Customer">
           <Key>
             <PropertyRef Name="CustomerID" />
-            <PropertyRef Name="FName" />
           </Key>
           <Property Name="CustomerID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
           <Property Name="FName" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />

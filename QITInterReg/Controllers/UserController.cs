@@ -11,14 +11,12 @@ namespace QITInterReg.Controllers
 {
     public class UserController : Controller
     {
-        private UserDAO userDAO;
         private RegistrationService registrationService;
         private EmailService emailService;
         private AuthenticationService authenticationService;
 
         public UserController()
         {
-            this.userDAO = new UserDAOImpl(new QUIRegDBEntities());
             this.registrationService = new RegistrationServiceImpl();
             this.emailService = new EmailServiceImpl();
             this.authenticationService = new AuthenticationServiceImpl();
@@ -116,7 +114,7 @@ namespace QITInterReg.Controllers
                     }
                     else
                     {
-                        return RedirectToAction("Index", "Home");
+                        return RedirectToAction("Index", "Customer");
                         
                     }
                    
